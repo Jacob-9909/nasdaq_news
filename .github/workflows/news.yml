@@ -50,5 +50,5 @@ jobs:
       # ✅ 결과물을 Google Drive로 업로드
       - name: Upload files to Google Drive
         run: |
-          rclone copy nasdaq_metadata.csv gdrive:NasdaqNews/
-          rclone copy nasdaq_index.faiss gdrive:NasdaqNews/
+          rclone copy nasdaq_metadata.csv nasdaq:NasdaqNews/
+          rclone copy nasdaq_index.faiss nasdaq:NasdaqNews/
