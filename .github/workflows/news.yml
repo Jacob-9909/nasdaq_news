@@ -1,0 +1,37 @@
+name: Daily Nasdaq News Summary
+
+on:
+  schedule:
+    - cron: '30 23 * * *'  # 매일 오전 8:30 KST
+  workflow_dispatch:
+
+jobs:
+  run-summary:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run summarizer
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python main.py
+
+      - name: Upload output files
+        uses: actions/upload-artifact@v3
+        with:
+          name: nasdaq-results
+          path: |
+            nasdaq_metadata.csv
+            nasdaq_index.faiss
