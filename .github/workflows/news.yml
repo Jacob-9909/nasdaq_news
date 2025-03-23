@@ -28,10 +28,27 @@ jobs:
         run: |
           python main.py
 
-      - name: Upload output files
-        uses: actions/upload-artifact@v4   # ✅ 여기 버전 변경
+      - name: Upload output files (Artifact)
+        uses: actions/upload-artifact@v4
         with:
           name: nasdaq-results
           path: |
             nasdaq_metadata.csv
             nasdaq_index.faiss
+
+      # ✅ Google Drive 업로드를 위한 rclone 설치
+      - name: Install rclone
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+
+      # ✅ rclone 설정파일 GitHub Secret에서 구성
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+
+      # ✅ 결과물을 Google Drive로 업로드
+      - name: Upload files to Google Drive
+        run: |
+          rclone copy nasdaq_metadata.csv gdrive:NasdaqNews/
+          rclone copy nasdaq_index.faiss gdrive:NasdaqNews/
