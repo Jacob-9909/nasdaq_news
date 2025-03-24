@@ -36,19 +36,26 @@ jobs:
             nasdaq_metadata.csv
             nasdaq_index.faiss
 
-      # ✅ Google Drive 업로드를 위한 rclone 설치
-      - name: Install rclone
-        run: |
-          curl https://rclone.org/install.sh | sudo bash
-
-      # ✅ rclone 설정파일 GitHub Secret에서 구성
-      - name: Configure rclone
-        run: |
-          mkdir -p ~/.config/rclone
-          echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+      # ✅ Google Cloud SDK 설치
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          version: 'latest'
+          service_account_key: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
 
       # ✅ 결과물을 Google Drive로 업로드
       - name: Upload files to Google Drive
         run: |
-          rclone copy nasdaq_metadata.csv nasdaq:NasdaqNews/
-          rclone copy nasdaq_index.faiss nasdaq:NasdaqNews/
+          echo "Uploading nasdaq_metadata.csv to Google Drive..."
+          curl -X POST -L \
+            -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
+            -F "metadata={name : 'nasdaq_metadata.csv'};type=application/json;charset=UTF-8" \
+            -F "file=@nasdaq_metadata.csv;type=application/octet-stream" \
+            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&parents=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}"
+
+          echo "Uploading nasdaq_index.faiss to Google Drive..."
+          curl -X POST -L \
+            -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
+            -F "metadata={name : 'nasdaq_index.faiss'};type=application/json;charset=UTF-8" \
+            -F "file=@nasdaq_index.faiss;type=application/octet-stream" \
+            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&parents=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}"
