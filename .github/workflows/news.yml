@@ -36,57 +36,17 @@ jobs:
             nasdaq_metadata.csv
             nasdaq_index.faiss
 
-      # ✅ Google Cloud 인증
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      # ✅ Google Drive에 파일 업로드 (간편한 방식)
+      - name: Upload nasdaq_metadata.csv to Google Drive
+        uses: willo32/google-drive-upload-action@v1
         with:
-          credentials_json: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
+          target: 'nasdaq_metadata.csv'
+          credentials: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
+          parent_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
 
-      # ✅ Google Drive에 파일 업로드 (수정된 부분)
-      - name: Upload files to Google Drive
-        env:
-          ACCESS_TOKEN: ${{ secrets.GOOGLE_ACCESS_TOKEN }}
-          FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
-        run: |
-          # Access Token 가져오기
-          TOKEN=$(gcloud auth print-access-token)
-
-          echo "Uploading nasdaq_metadata.csv to Google Drive..."
-          curl -X POST -L \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: multipart/related; boundary=foo_bar_baz" \
-            --data-binary @- <<EOF
-          --foo_bar_baz
-          Content-Type: application/json; charset=UTF-8
-
-          {
-            "name": "nasdaq_metadata.csv",
-            "parents": ["$FOLDER_ID"]
-          }
-
-          --foo_bar_baz
-          Content-Type: application/octet-stream
-
-          $(cat nasdaq_metadata.csv)
-          --foo_bar_baz--
-          EOF
-
-          echo "Uploading nasdaq_index.faiss to Google Drive..."
-          curl -X POST -L \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: multipart/related; boundary=foo_bar_baz" \
-            --data-binary @- <<EOF
-          --foo_bar_baz
-          Content-Type: application/json; charset=UTF-8
-
-          {
-            "name": "nasdaq_index.faiss",
-            "parents": ["$FOLDER_ID"]
-          }
-
-          --foo_bar_baz
-          Content-Type: application/octet-stream
-
-          $(cat nasdaq_index.faiss)
-          --foo_bar_baz--
-          EOF
+      - name: Upload nasdaq_index.faiss to Google Drive
+        uses: willo32/google-drive-upload-action@v1
+        with:
+          target: 'nasdaq_index.faiss'
+          credentials: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
+          parent_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
