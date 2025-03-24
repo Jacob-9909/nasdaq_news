@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import email.utils as eut
 import pytz
 
-def fetch_nasdaq_news(limit=5):
+def fetch_nasdaq_news(limit=50):
     rss_url = "https://www.nasdaq.com/feed/rssoutbound?category=Markets"
     headers = {"User-Agent": "Mozilla/5.0"}
 
