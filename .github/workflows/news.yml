@@ -45,17 +45,28 @@ jobs:
       # ✅ Google Drive에 파일 업로드 (수정된 부분)
       - name: Upload files to Google Drive
         env:
-          ACCESS_TOKEN: ${{ secrets.GOOGLE_ACCESS_TOKEN }}
           FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
         run: |
           # Access Token 가져오기
           TOKEN=$(gcloud auth print-access-token)
+          
+          # Access Token이 없을 경우 실패 처리
+          if [[ -z "$TOKEN" ]]; then
+            echo "❌ ERROR: Failed to obtain Access Token"
+            exit 1
+          fi
 
-          echo "Uploading nasdaq_metadata.csv to Google Drive..."
+          echo "✅ Google Drive Upload 시작"
+
+          # Google Drive API URL
+          DRIVE_API="https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true"
+
+          # 🟢 nasdaq_metadata.csv 업로드
+          echo "📂 Uploading nasdaq_metadata.csv..."
           curl -X POST -L \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: multipart/related; boundary=foo_bar_baz" \
-            --data-binary @- <<EOF
+            --data-binary @- "$DRIVE_API" <<EOF
           --foo_bar_baz
           Content-Type: application/json; charset=UTF-8
 
@@ -71,11 +82,12 @@ jobs:
           --foo_bar_baz--
           EOF
 
-          echo "Uploading nasdaq_index.faiss to Google Drive..."
+          # 🟢 nasdaq_index.faiss 업로드
+          echo "📂 Uploading nasdaq_index.faiss..."
           curl -X POST -L \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: multipart/related; boundary=foo_bar_baz" \
-            --data-binary @- <<EOF
+            --data-binary @- "$DRIVE_API" <<EOF
           --foo_bar_baz
           Content-Type: application/json; charset=UTF-8
 
@@ -90,3 +102,5 @@ jobs:
           $(cat nasdaq_index.faiss)
           --foo_bar_baz--
           EOF
+
+          echo "✅ Google Drive Upload 완료"
