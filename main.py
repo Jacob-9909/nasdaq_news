@@ -3,12 +3,16 @@ from fetcher import fetch_nasdaq_news, fetch_article_content
 from summarizer import summarize
 from embedder import embed
 from index_manager import load_index_and_metadata, save_index_and_metadata
-from search import faiss_search
+from merge_files import merge_files_from_drive  # 추가된 부분
 import numpy as np
 import pandas as pd
 
 def run():
-    index, df = load_index_and_metadata(INDEX_PATH, META_PATH)
+    # 0. 기존 인덱스와 메타데이터 파일 로드
+    index, df = load_index_and_metadata(INDEX_PATH, META_PATH)  # 기존 인덱스와 메타데이터 로드
+    print(f"📰 기존 메타데이터: {len(df)}개의 기사")
+
+    # 1. 뉴스 기사 수집 및 메타데이터 생성
     articles = fetch_nasdaq_news(limit=NEWS_LIMIT)
     print(f"📰 수집된 기사 수: {len(articles)}")
 
@@ -53,14 +57,19 @@ def run():
         })
 
     if new_embeddings:
-        index.add(np.array(new_embeddings))
+        # 로컬 데이터프레임에 새 데이터 추가
         df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
+        # 임베딩을 FAISS 인덱스에 추가
+        index.add(np.array(new_embeddings))
+        # 메타데이터와 인덱스 저장
         save_index_and_metadata(index, df, INDEX_PATH, META_PATH)
         print(f"\n✅ {len(new_rows)}개의 기사 저장 완료")
     else:
         print("ℹ️ 새로 저장된 기사가 없습니다.")
 
-    # faiss_search(index, df)
+    # 2. Google Drive에서 메타데이터 및 인덱스 병합 작업
+    print("🔄 Google Drive에서 파일을 병합 중...")
+    merge_files_from_drive()  # 병합 함수 호출
 
 if __name__ == "__main__":
     run()
