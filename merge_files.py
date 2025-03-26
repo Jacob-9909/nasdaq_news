@@ -5,13 +5,14 @@ import pandas as pd
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 from io import BytesIO
+import json
 from google.oauth2.service_account import Credentials
 
 # 구글 드라이브 API 인증 설정
 def authenticate_google_drive():
-    creds = Credentials.from_service_account_file(
-        os.getenv("GOOGLE_SERVICE_ACCOUNT_CREDENTIALS"), scopes=["https://www.googleapis.com/auth/drive"]
-    )
+    creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_CREDENTIALS")  # JSON contents from GitHub Secrets
+    creds_info = json.loads(creds_json)  # Convert string to JSON
+    creds = Credentials.from_service_account_info(creds_info, scopes=["https://www.googleapis.com/auth/drive"])
     service = build('drive', 'v3', credentials=creds)
     return service
 
