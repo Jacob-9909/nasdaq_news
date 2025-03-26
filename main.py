@@ -1,13 +1,14 @@
+import pandas as pd
+import numpy as np
+import faiss
 from config import INDEX_PATH, META_PATH, NEWS_LIMIT
 from fetcher import fetch_nasdaq_news, fetch_article_content
 from summarizer import summarize
 from embedder import embed
 from index_manager import load_index_and_metadata, save_index_and_metadata
-from search import faiss_search
-import numpy as np
-import pandas as pd
 
 def run():
+    # 기존 인덱스와 메타데이터 불러오기
     index, df = load_index_and_metadata(INDEX_PATH, META_PATH)
     articles = fetch_nasdaq_news(limit=NEWS_LIMIT)
     print(f"📰 수집된 기사 수: {len(articles)}")
@@ -52,15 +53,15 @@ def run():
             "summary": summary
         })
 
+    # 새로 수집된 데이터가 있으면 인덱스에 추가하고 데이터프레임에 이어붙임
     if new_embeddings:
         index.add(np.array(new_embeddings))
-        df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
+        new_df = pd.DataFrame(new_rows)
+        df = pd.concat([df, new_df], ignore_index=True)
         save_index_and_metadata(index, df, INDEX_PATH, META_PATH)
         print(f"\n✅ {len(new_rows)}개의 기사 저장 완료")
     else:
         print("ℹ️ 새로 저장된 기사가 없습니다.")
-
-    # faiss_search(index, df)
 
 if __name__ == "__main__":
     run()

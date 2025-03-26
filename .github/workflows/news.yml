@@ -36,17 +36,30 @@ jobs:
             nasdaq_metadata.csv
             nasdaq_index.faiss
 
-      # ✅ Google Drive에 파일 업로드 (간편한 방식)
-      - name: Upload nasdaq_metadata.csv to Google Drive
-        uses: willo32/google-drive-upload-action@v1
+      # ✅ Google Drive에 파일 업로드 (삭제 후 덮어쓰기)
+      - name: Authenticate with Google Drive
+        uses: google-github-actions/auth@v0
         with:
-          target: 'nasdaq_metadata.csv'
-          credentials: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
-          parent_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          credentials_json: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
+
+      - name: Delete existing file from Google Drive (nasdaq_metadata.csv)
+        run: |
+          FILE_ID=$(gdrive list --query "name = 'nasdaq_metadata.csv'" --no-header | awk '{print $1}')
+          if [ -n "$FILE_ID" ]; then
+            gdrive delete "$FILE_ID"
+          fi
+
+      - name: Upload nasdaq_metadata.csv to Google Drive
+        run: |
+          gdrive upload --parent ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }} nasdaq_metadata.csv
+
+      - name: Delete existing file from Google Drive (nasdaq_index.faiss)
+        run: |
+          FILE_ID=$(gdrive list --query "name = 'nasdaq_index.faiss'" --no-header | awk '{print $1}')
+          if [ -n "$FILE_ID" ]; then
+            gdrive delete "$FILE_ID"
+          fi
 
       - name: Upload nasdaq_index.faiss to Google Drive
-        uses: willo32/google-drive-upload-action@v1
-        with:
-          target: 'nasdaq_index.faiss'
-          credentials: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
-          parent_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+        run: |
+          gdrive upload --parent ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }} nasdaq_index.faiss
