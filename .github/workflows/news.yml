@@ -22,19 +22,22 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run summarizer
+      - name: Run summarizer and merge files
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # OpenAI API 키 (Secrets로 설정)
+          GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}  # Google API 인증 파일 (Secrets로 설정)
+          GOOGLE_DRIVE_METADATA_FILE_ID: ${{ secrets.GOOGLE_DRIVE_METADATA_FILE_ID }}  # Google Drive 파일 ID (Secrets로 설정)
+          GOOGLE_DRIVE_INDEX_FILE_ID: ${{ secrets.GOOGLE_DRIVE_INDEX_FILE_ID }}  # Google Drive 인덱스 파일 ID (Secrets로 설정)
         run: |
-          python main.py
+          python main.py  # main.py 실행하여 뉴스 수집, 메타데이터 생성 및 병합 작업 수행
 
       - name: Upload output files (Artifact)
         uses: actions/upload-artifact@v4
         with:
           name: nasdaq-results
           path: |
-            nasdaq_metadata.csv
-            nasdaq_index.faiss
+            nasdaq_metadata_combined.csv  # 병합된 메타데이터 파일
+            nasdaq_index.faiss  # 인덱스 파일
 
       # ✅ Google Drive에 파일 업로드 (삭제 후 덮어쓰기)
       - name: Authenticate with Google Drive

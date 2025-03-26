@@ -10,6 +10,7 @@ from index_manager import load_index_and_metadata, save_index_and_metadata
 def run():
     # 기존 인덱스와 메타데이터 불러오기
     index, df = load_index_and_metadata(INDEX_PATH, META_PATH)
+
     articles = fetch_nasdaq_news(limit=NEWS_LIMIT)
     print(f"📰 수집된 기사 수: {len(articles)}")
 
@@ -55,9 +56,11 @@ def run():
 
     # 새로 수집된 데이터가 있으면 인덱스에 추가하고 데이터프레임에 이어붙임
     if new_embeddings:
+
         index.add(np.array(new_embeddings))
         new_df = pd.DataFrame(new_rows)
         df = pd.concat([df, new_df], ignore_index=True)
+
         save_index_and_metadata(index, df, INDEX_PATH, META_PATH)
         print(f"\n✅ {len(new_rows)}개의 기사 저장 완료")
     else:
