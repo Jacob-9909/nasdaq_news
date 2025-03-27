@@ -1,25 +1,28 @@
 import os
-import faiss
+from langchain_community.vectorstores import FAISS
+from langchain_community.docstore.in_memory import InMemoryDocstore
 import pandas as pd
 
-def load_index_and_metadata(index_path, meta_path):
-    if os.path.exists(index_path):
-        index = faiss.read_index(index_path)
-        print("✅ 인덱스 불러옴")
-    else:
-        index = faiss.IndexFlatL2(1536)
-        print("📦 새 인덱스 생성")
+def save_index_and_metadata(index, docstore, index_to_docstore_id, df, index_path, meta_path):
+    """
+    FAISS 인덱스, 문서 저장소, 그리고 인덱스와 문서 ID 매핑을 지정된 경로에 저장합니다.
+    """
+    # 저장할 폴더 경로
+    folder_path = os.path.dirname(index_path)
 
-    if os.path.exists(meta_path):
-        df = pd.read_csv(meta_path)
-        print("✅ 메타데이터 불러옴")
-    else:
-        df = pd.DataFrame(columns=["id", "title", "date", "summary"])
-        print("📄 새 메타데이터 생성")
+    # FAISS 벡터 스토어 설정
+    vector_store = FAISS(
+        embedding_function=None,  # 임베딩 함수는 나중에 지정 가능
+        index=index,              # FAISS 인덱스
+        docstore=docstore,        # 문서 저장소
+        index_to_docstore_id=index_to_docstore_id  # 인덱스 ID와 문서 ID 매핑
+    )
 
-    return index, df
-
-def save_index_and_metadata(index, df, index_path, meta_path):
-    faiss.write_index(index, index_path)
+    # 메타데이터를 CSV로 저장
     df.to_csv(meta_path, index=False)
+
+    # FAISS 벡터 스토어 저장
+    vector_store.save_local(folder_path)
     print("💾 저장 완료")
+
+

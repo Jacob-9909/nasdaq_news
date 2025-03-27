@@ -2,15 +2,29 @@ from config import INDEX_PATH, META_PATH, NEWS_LIMIT
 from fetcher import fetch_nasdaq_news, fetch_article_content
 from summarizer import summarize
 from embedder import embed
-from index_manager import load_index_and_metadata, save_index_and_metadata
+from index_manager import save_index_and_metadata
 from search import faiss_search
 import numpy as np
 import pandas as pd
 from langchain_community.docstore.in_memory import InMemoryDocstore  # 새로운 임포트
+from langchain_community.vectorstores import FAISS
+import faiss
+from langchain_openai import OpenAIEmbeddings
 
 def run():
-    # 인덱스와 메타데이터 로드
-    index, df = load_index_and_metadata(INDEX_PATH, META_PATH)
+    # OpenAI Embedding을 사용하여 임베딩 차원 가져오기
+    embedding = OpenAIEmbeddings()
+    vector_dim = len(embedding.embed_query("hello world"))  # 벡터 차원
+
+    # FAISS 인덱스 새로 생성
+    index = faiss.IndexFlatL2(vector_dim)  # L2 거리 기반 인덱스 생성
+    docstore = InMemoryDocstore()  # 새로운 문서 저장소
+    index_to_docstore_id = {}  # 빈 딕셔너리로 시작
+
+    # 새로 시작하는 데이터프레임
+    df = pd.DataFrame(columns=["id", "title", "date", "summary"])
+
+    # 기사 수집
     articles = fetch_nasdaq_news(limit=NEWS_LIMIT)
     print(f"📰 수집된 기사 수: {len(articles)}")
 
@@ -23,17 +37,6 @@ def run():
 
     # 기존 title+date 조합 키로 중복 체크용 Set 생성
     existing_keys = set((df["title"] + "|" + df["date"]).values)
-
-    # docstore 및 index_to_docstore_id 초기화
-    docstore = InMemoryDocstore()  # 빈 문서 저장소 생성 (새로운 방식)
-    index_to_docstore_id = {}
-
-    # 기존 title+date를 기반으로 docstore 및 인덱스 ID 매핑 설정
-    for idx, row in df.iterrows():
-        doc_id = f"doc_{idx}"
-        doc_content = row['summary']  # 예시로 summary를 원본 텍스트로 사용
-        docstore.add({doc_id: doc_content})  # 새로운 방식으로 문서 추가
-        index_to_docstore_id[idx] = doc_id  # 인덱스 ID와 문서 ID 매핑
 
     # 기사 처리 및 임베딩 추가
     for idx, article in enumerate(articles, start=1):
@@ -82,12 +85,10 @@ def run():
             index_to_docstore_id[i] = doc_id  # 인덱스 ID와 문서 ID 매핑
 
         # 인덱스와 메타데이터 저장
-        save_index_and_metadata(index, df, INDEX_PATH, META_PATH)
+        save_index_and_metadata(index, docstore, index_to_docstore_id, df, INDEX_PATH, META_PATH)
         print(f"\n✅ {len(new_rows)}개의 기사 저장 완료")
     else:
         print("ℹ️ 새로 저장된 기사가 없습니다.")
-
-    # faiss_search(index, df)  # 추가적으로 검색 기능을 사용하려면 여기를 활성화
 
 if __name__ == "__main__":
     run()
