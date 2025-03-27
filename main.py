@@ -14,12 +14,15 @@ from langchain_openai import OpenAIEmbeddings
 def run():
     # OpenAI Embedding을 사용하여 임베딩 차원 가져오기
     embedding = OpenAIEmbeddings()
-    vector_dim = len(embedding.embed_query("hello world"))  # 벡터 차원
+    vector_dim = 1536
 
-    # FAISS 인덱스 새로 생성
-    index = faiss.IndexFlatL2(vector_dim)  # L2 거리 기반 인덱스 생성
-    docstore = InMemoryDocstore()  # 새로운 문서 저장소
-    index_to_docstore_id = {}  # 빈 딕셔너리로 시작
+    # FAISS 벡터 저장소 생성
+    db = FAISS(
+        embedding_function=embedding,
+        index=faiss.IndexFlatL2(vector_dim),
+        docstore=InMemoryDocstore(),
+        index_to_docstore_id={}
+    )
 
     # 새로 시작하는 데이터프레임
     df = pd.DataFrame(columns=["id", "title", "date", "summary"])
@@ -73,19 +76,21 @@ def run():
 
     # 새 임베딩 추가 및 인덱스 저장
     if new_embeddings:
-        # FAISS 인덱스에 벡터 추가
-        index.add(np.array(new_embeddings))
-        df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)  # 메타데이터 추가
+        # 벡터 추가
+        db.index.add(np.array(new_embeddings))
 
-        # 새 문서 정보 docstore에 추가
+        # 메타데이터 추가
+        df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
+
+        # 문서 저장소에 문서 추가 및 매핑
         for i, row in enumerate(new_rows, start=len(df) - len(new_rows)):
             doc_id = f"doc_{i}"
             doc_content = row["summary"]
-            docstore.add({doc_id: doc_content})  # 새로운 방식으로 문서 추가
-            index_to_docstore_id[i] = doc_id  # 인덱스 ID와 문서 ID 매핑
+            db.docstore.add({doc_id: doc_content})
+            db.index_to_docstore_id[i] = doc_id
 
         # 인덱스와 메타데이터 저장
-        save_index_and_metadata(index, docstore, index_to_docstore_id, df, INDEX_PATH, META_PATH)
+        save_index_and_metadata( db.index, db.docstore, db.index_to_docstore_id, df, INDEX_PATH, META_PATH)
         print(f"\n✅ {len(new_rows)}개의 기사 저장 완료")
     else:
         print("ℹ️ 새로 저장된 기사가 없습니다.")

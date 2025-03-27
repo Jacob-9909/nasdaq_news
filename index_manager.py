@@ -2,6 +2,7 @@ import os
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
 import pandas as pd
+from config import INDEX_PATH
 
 def save_index_and_metadata(index, docstore, index_to_docstore_id, df, index_path, meta_path):
     """
@@ -26,5 +27,5 @@ def save_index_and_metadata(index, docstore, index_to_docstore_id, df, index_pat
     df.to_csv(meta_path, index=False)
 
     # FAISS 벡터 스토어 저장
-    vector_store.save_local(folder_path)  # 파일 경로로 저장
+    vector_store.save_local(folder_path = folder_path, index_name= INDEX_PATH)  # 파일 경로로 저장
     print("💾 저장 완료")
