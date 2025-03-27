@@ -37,16 +37,20 @@ jobs:
             nasdaq_index.faiss
 
       # ✅ Google Drive에 파일 업로드 (간편한 방식)
+      - name: Set date variable
+        id: set_date
+        run: echo "DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV  # 오늘 날짜를 환경 변수로 설정
+
       - name: Upload nasdaq_metadata.csv to Google Drive
         uses: willo32/google-drive-upload-action@v1
         with:
-          target: 'nasdaq_metadata.csv'
+          target: 'nasdaq_metadata_${{ env.DATE }}.csv'  # 환경 변수로 날짜 포함
           credentials: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
           parent_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
 
       - name: Upload nasdaq_index.faiss to Google Drive
         uses: willo32/google-drive-upload-action@v1
         with:
-          target: 'nasdaq_index.faiss'
+          target: 'nasdaq_index_${{ env.DATE }}.faiss'  # 환경 변수로 날짜 포함
           credentials: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
           parent_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
