@@ -78,7 +78,7 @@ def run():
         for i, row in enumerate(new_rows, start=len(df) - len(new_rows)):
             doc_id = f"doc_{i}"
             doc_content = row["summary"]
-            docstore.add_documents({doc_id: doc_content})  # 새로운 방식으로 문서 추가
+            docstore.add({doc_id: doc_content})  # 새로운 방식으로 문서 추가
             index_to_docstore_id[i] = doc_id  # 인덱스 ID와 문서 ID 매핑
 
         # 인덱스와 메타데이터 저장
