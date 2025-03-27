@@ -6,7 +6,7 @@ from index_manager import load_index_and_metadata, save_index_and_metadata
 from search import faiss_search
 import numpy as np
 import pandas as pd
-from langchain.docstore import InMemoryDocstore
+from langchain_community.docstore.in_memory import InMemoryDocstore  # 새로운 임포트
 
 def run():
     # 인덱스와 메타데이터 로드
@@ -25,14 +25,14 @@ def run():
     existing_keys = set((df["title"] + "|" + df["date"]).values)
 
     # docstore 및 index_to_docstore_id 초기화
-    docstore = InMemoryDocstore({})  # 빈 문서 저장소 생성
+    docstore = InMemoryDocstore()  # 빈 문서 저장소 생성 (새로운 방식)
     index_to_docstore_id = {}
 
     # 기존 title+date를 기반으로 docstore 및 인덱스 ID 매핑 설정
     for idx, row in df.iterrows():
         doc_id = f"doc_{idx}"
         doc_content = row['summary']  # 예시로 summary를 원본 텍스트로 사용
-        docstore.add_document(doc_id, doc_content)  # docstore에 원본 문서 추가
+        docstore[doc_id] = doc_content  # 새로운 방식으로 문서 추가
         index_to_docstore_id[idx] = doc_id  # 인덱스 ID와 문서 ID 매핑
 
     # 기사 처리 및 임베딩 추가
@@ -78,7 +78,7 @@ def run():
         for i, row in enumerate(new_rows, start=len(df) - len(new_rows)):
             doc_id = f"doc_{i}"
             doc_content = row["summary"]
-            docstore.add_document(doc_id, doc_content)  # docstore에 원본 문서 추가
+            docstore[doc_id] = doc_content  # 새로운 방식으로 문서 추가
             index_to_docstore_id[i] = doc_id  # 인덱스 ID와 문서 ID 매핑
 
         # 인덱스와 메타데이터 저장
