@@ -38,14 +38,14 @@ jobs:
 
       # ✅ Google Drive에 파일 업로드 (간편한 방식)
       - name: Upload nasdaq_metadata.csv to Google Drive
-        uses: willo32/google-drive-upload-action@v1
+        uses: willo32/google-drive-upload-action@v1.1.0
         with:
           target: 'nasdaq_metadata.csv'
           credentials: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
           parent_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
 
       - name: Upload nasdaq_index.faiss to Google Drive
-        uses: willo32/google-drive-upload-action@v1
+        uses: willo32/google-drive-upload-action@v1.1.0
         with:
           target: 'nasdaq_index.faiss'
           credentials: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
