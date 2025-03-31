@@ -8,4 +8,4 @@ today_date = datetime.now(kst).strftime("%Y-%m-%d")
 
 # 날짜를 포함한 파일 경로로 설정
 META_PATH = f"nasdaq_metadata_{today_date}.csv"
-NEWS_LIMIT = 5
+NEWS_LIMIT = 50
