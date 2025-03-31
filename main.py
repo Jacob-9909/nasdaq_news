@@ -1,28 +1,23 @@
-from config import INDEX_PATH, META_PATH, NEWS_LIMIT
+from config import META_PATH, NEWS_LIMIT
 from fetcher import fetch_nasdaq_news, fetch_article_content
 from summarizer import summarize
 from embedder import embed
 from index_manager import save_index_and_metadata
-from search import faiss_search
 import numpy as np
 import pandas as pd
-from langchain_community.docstore.in_memory import InMemoryDocstore  # 새로운 임포트
-from langchain_community.vectorstores import FAISS
-import faiss
-from langchain_openai import OpenAIEmbeddings
 
 def run():
     # OpenAI Embedding을 사용하여 임베딩 차원 가져오기
-    embedding = OpenAIEmbeddings()
-    vector_dim = 1536
+    # embedding = OpenAIEmbeddings()
+    # vector_dim = 1536
 
-    # FAISS 벡터 저장소 생성
-    db = FAISS(
-        embedding_function=embedding,
-        index=faiss.IndexFlatL2(vector_dim),
-        docstore=InMemoryDocstore(),
-        index_to_docstore_id={}
-    )
+    # # FAISS 벡터 저장소 생성
+    # db = FAISS(
+    #     embedding_function=embedding,
+    #     index=faiss.IndexFlatL2(vector_dim),
+    #     docstore=InMemoryDocstore(),
+    #     index_to_docstore_id={}
+    # )
 
     # 새로 시작하는 데이터프레임
     df = pd.DataFrame(columns=["id", "title", "date", "summary"])
@@ -35,7 +30,7 @@ def run():
     df["date"] = df["date"].astype(str)
 
     # 새 문서 임베딩 및 docstore 설정
-    new_embeddings = []
+    # new_embeddings = []
     new_rows = []
 
     # 기존 title+date 조합 키로 중복 체크용 Set 생성
@@ -64,9 +59,9 @@ def run():
         summary = summarize(title, content)
         print("📝 요약 완료")
 
-        # 임베딩 생성
-        vector = embed(f"{title}\n{summary}")
-        new_embeddings.append(vector)
+        # # 임베딩 생성
+        # vector = embed(f"{title}\n{summary}")
+        # new_embeddings.append(vector)
         new_rows.append({
             "id": f"article_{len(df) + len(new_rows) + 1}",
             "title": title,
@@ -75,25 +70,23 @@ def run():
         })
 
     # 새 임베딩 추가 및 인덱스 저장
-    if new_embeddings:
         # 벡터 추가
-        db.index.add(np.array(new_embeddings))
+        # db.index.add(np.array(new_embeddings))
 
         # 메타데이터 추가
-        df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
+    df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
 
-        # 문서 저장소에 문서 추가 및 매핑
-        for i, row in enumerate(new_rows, start=len(df) - len(new_rows)):
-            doc_id = f"doc_{i}"
-            doc_content = row["summary"]
-            db.docstore.add({doc_id: doc_content})
-            db.index_to_docstore_id[i] = doc_id
+        # # 문서 저장소에 문서 추가 및 매핑
+        # for i, row in enumerate(new_rows, start=len(df) - len(new_rows)):
+        #     doc_id = f"doc_{i}"
+        #     doc_content = row["summary"]
+        #     db.docstore.add({doc_id: doc_content})
+        #     db.index_to_docstore_id[i] = doc_id
 
         # 인덱스와 메타데이터 저장
-        save_index_and_metadata( db.index, db.docstore, db.index_to_docstore_id, df, INDEX_PATH, META_PATH)
-        print(f"\n✅ {len(new_rows)}개의 기사 저장 완료")
-    else:
-        print("ℹ️ 새로 저장된 기사가 없습니다.")
+        # save_index_and_metadata( db.index, db.docstore, db.index_to_docstore_id, df, INDEX_PATH, META_PATH)
+    save_index_and_metadata(df, META_PATH)
+    print(f"\n✅ {len(new_rows)}개의 기사 저장 완료")
 
 if __name__ == "__main__":
     run()

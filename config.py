@@ -7,6 +7,5 @@ kst = timezone(timedelta(hours=9))
 today_date = datetime.now(kst).strftime("%Y-%m-%d")
 
 # 날짜를 포함한 파일 경로로 설정
-INDEX_PATH = f"nasdaq_index_{today_date}"
 META_PATH = f"nasdaq_metadata_{today_date}.csv"
 NEWS_LIMIT = 5
