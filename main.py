@@ -20,7 +20,7 @@ def run():
     # )
 
     # 새로 시작하는 데이터프레임
-    df = pd.DataFrame(columns=["id", "title", "date", "summary"])
+    df = pd.DataFrame(columns=["id", "title", "date","content","summary"])
 
     # 기사 수집
     articles = fetch_nasdaq_news(limit=NEWS_LIMIT)
@@ -66,8 +66,10 @@ def run():
             "id": f"article_{len(df) + len(new_rows) + 1}",
             "title": title,
             "date": date_str,
+            "content": content,
             "summary": summary
         })
+        print(content)
 
     # 새 임베딩 추가 및 인덱스 저장
         # 벡터 추가

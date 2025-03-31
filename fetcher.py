@@ -58,8 +58,24 @@ def fetch_article_content(url):
         return "", None
 
     soup = BeautifulSoup(res.text, 'html.parser')
-    content_div = soup.select_one("div.article-body") or soup.select_one("body")
+
+    # 더 구체적인 본문 선택자 시도
+    content_div = (
+        soup.select_one("div.body__content") or  # ✅ 나스닥 기사에 실제 사용되는 본문 영역
+        soup.select_one("div.article-body") or
+        soup.select_one("article") or
+        soup.select_one("body")
+    )
+
+    if not content_div:
+        print("❌ 본문 div를 찾지 못함")
+        return "", None
+
     content = content_div.get_text(separator="\n").strip()
+    # 공백 제거
+    content = " ".join(content.split())
+    # 링크 추출은 생략 가능하거나 그대로 유지
     a_tag = content_div.find("a")
     link = a_tag["href"] if a_tag else None
+
     return content, link
