@@ -1,7 +1,7 @@
 from config import META_PATH, NEWS_LIMIT
 from fetcher import fetch_nasdaq_news, fetch_article_content
 from summarizer import summarize
-from embedder import embed
+from embedder import translation
 from index_manager import save_index_and_metadata
 import numpy as np
 import pandas as pd
@@ -60,7 +60,7 @@ def run():
         print("📝 요약 완료")
 
         # # 임베딩 생성
-        # vector = embed(f"{title}\n{summary}")
+        content = translation(content)
         # new_embeddings.append(vector)
         new_rows.append({
             "id": f"article_{len(df) + len(new_rows) + 1}",
@@ -69,7 +69,7 @@ def run():
             "content": content,
             "summary": summary
         })
-        print(content)
+        # print(content)
 
     # 새 임베딩 추가 및 인덱스 저장
         # 벡터 추가
