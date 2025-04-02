@@ -2,7 +2,7 @@ name: Daily Nasdaq News Summary
 
 on:
   schedule:
-    - cron: '30 23 * * *'  # 매일 오전 8:30 KST
+    - cron: '30 0 * * *'  # UTC 기준으로 매일 오전 0시 30분 (KST 9:30)
   workflow_dispatch:
 
 jobs:
