@@ -4,19 +4,17 @@ from datetime import datetime, timedelta
 import email.utils as eut
 import pytz
 
-def fetch_nasdaq_news(limit=50):
-    rss_url = "https://www.nasdaq.com/feed/rssoutbound?category=Markets"
+def fetch_nasdaq_news(limit=100):
+    rss_urls = [
+        "https://www.nasdaq.com/feed/rssoutbound?category=Markets",
+        "https://www.nasdaq.com/feed/rssoutbound?symbol=aapl",
+        "https://www.nasdaq.com/feed/rssoutbound?symbol=TSLA",
+        "https://www.nasdaq.com/feed/rssoutbound?symbol=NVDA",
+        "https://www.nasdaq.com/feed/rssoutbound?symbol=MSFT",
+        "https://www.nasdaq.com/feed/rssoutbound?category=Stocks",
+        "https://www.nasdaq.com/feed/rssoutbound?category=Artificial+Intelligence"]
+    
     headers = {"User-Agent": "Mozilla/5.0"}
-
-    try:
-        response = requests.get(rss_url, headers=headers)
-        response.raise_for_status()
-    except Exception as e:
-        print(f"RSS 요청 중 오류 발생: {e}")
-        return []
-
-    soup = BeautifulSoup(response.content, "xml")
-    items = soup.find_all("item")
 
     kst = pytz.timezone("Asia/Seoul")
     now_kst = datetime.now(kst)
@@ -25,27 +23,39 @@ def fetch_nasdaq_news(limit=50):
     yesterday_end = today_start
 
     articles = []
-    for item in items:
-        title_tag = item.find("title")
-        link_tag = item.find("link")
-        pub_date_tag = item.find("pubDate")
-        if not (title_tag and link_tag and pub_date_tag):
+
+    for rss_url in rss_urls:
+        try:
+            response = requests.get(rss_url, headers=headers)
+            response.raise_for_status()
+        except Exception as e:
+            print(f"RSS 요청 중 오류 발생 ({rss_url}): {e}")
             continue
 
-        pub_date_utc = eut.parsedate_to_datetime(pub_date_tag.get_text())
-        pub_date_kst = pub_date_utc.astimezone(kst)
+        soup = BeautifulSoup(response.content, "xml")
+        items = soup.find_all("item")
 
-        if not (yesterday_start <= pub_date_kst < yesterday_end):
-            continue
+        for item in items:
+            title_tag = item.find("title")
+            link_tag = item.find("link")
+            pub_date_tag = item.find("pubDate")
+            if not (title_tag and link_tag and pub_date_tag):
+                continue
 
-        articles.append({
-            "title": title_tag.get_text(strip=True),
-            "url": link_tag.get_text(strip=True),
-            "pub_date": pub_date_kst.isoformat()
-        })
+            pub_date_utc = eut.parsedate_to_datetime(pub_date_tag.get_text())
+            pub_date_kst = pub_date_utc.astimezone(kst)
 
-        if len(articles) >= limit:
-            break
+            if not (yesterday_start <= pub_date_kst < yesterday_end):
+                continue
+
+            articles.append({
+                "title": title_tag.get_text(strip=True),
+                "url": link_tag.get_text(strip=True),
+                "pub_date": pub_date_kst.isoformat()
+            })
+
+            if len(articles) >= limit:
+                return articles  # 바로 반환
 
     return articles
 
